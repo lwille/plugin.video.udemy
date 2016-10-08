@@ -1,4 +1,5 @@
 import json
+import os
 import requests
 
 from xbmcswift2 import Plugin
@@ -19,8 +20,7 @@ cookie_jar.set('csrftoken', csrfmiddlewaretoken)
 
 
 def login():
-
-    plugin.notify("Logging you in as %s" % plugin.get_setting('user_email'), None, 1000)
+    plugin.notify("Logging you in as %s" % setting_get('user_email'), None, 1000)
     login_headers = {
         'Accept': 'application/json, text/plain, */*',
         'Origin': 'https://www.udemy.com',
@@ -34,14 +34,20 @@ def login():
 
     r = requests.post(login_url, data={
         'csrfmiddlewaretoken': csrfmiddlewaretoken,
-        'email': plugin.get_setting('user_email'),
-        'password': plugin.get_setting('user_password'),
+        'email': setting_get('user_email'),
+        'password': setting_get('user_password'),
         'locale': 'en_US'
     }, headers=login_headers, cookies=cookie_jar)
     print(json.dumps(r.cookies.get_dict()))
     print(r.content)
     r.raise_for_status()
     headers['X-Udemy-Authorization'] = headers['Authorization'] = "Bearer %s" % r.cookies['access_token']
+
+
+def setting_get(key):
+    if os.environ.get('SETTINGS'):
+        return json.loads(os.environ['SETTINGS']).get(key)
+    return plugin.get_setting(key)
 
 
 #
@@ -55,6 +61,7 @@ def load_json(url, params=None):
     r = requests.get(url, params=params, headers=headers, cookies=cookie_jar)
     r.raise_for_status()
     return r.json()
+
 
 def ensure_login():
     if not cookie_jar.get('access_token'):
@@ -70,7 +77,7 @@ def index():
 
 
 @plugin.route('/course/<cid>/play/<title>', name='course_play')
-def play(cid,title):
+def play(cid, title):
     return None
 
 
@@ -94,9 +101,8 @@ def show_course_details(cid):
 
 @plugin.route('/courses', name='courses')
 def show_courses():
-
     ensure_login()
-    plugin.notify("Loading courses for %s" % plugin.get_setting('user_email'), None, 1000)
+    plugin.notify("Loading courses for %s" % setting_get('user_email'), None, 1000)
     courses = load_json(my_courses_url)
 
     items = []
