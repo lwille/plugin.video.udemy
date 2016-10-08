@@ -7,16 +7,13 @@ from xbmcswift2 import Plugin
 plugin = Plugin()
 
 headers = {'user-agent': plugin.name + '/' + plugin.addon.getAddonInfo('version')}
-base_url = 'https://www.udemy.com/api-2.0'
+base_url = 'https://www.udemy.com'
 
-csrfmiddlewaretoken = 'kTpO8iKchEetelPpjDHDZ4XhMEAzwUd1'
-
-my_courses_url = "%s/users/me/subscribed-courses" % base_url
-courses_url = "%s/courses" % base_url
-login_url = "https://www.udemy.com/join/login-popup/?display_type=popup&locale=en_US&response_type=json&next=https%3A%2F%2Fwww.udemy.com"
+my_courses_url = "%s/api-2.0/users/me/subscribed-courses" % base_url
+courses_url = "%s/api-2.0/courses" % base_url
+login_url = "%s/join/login-popup/" % base_url
 
 cookie_jar = requests.cookies.RequestsCookieJar()
-cookie_jar.set('csrftoken', csrfmiddlewaretoken)
 
 
 def login():
@@ -31,15 +28,20 @@ def login():
         'Accept-Encoding': 'gzip, deflate, br',
         'Accept-Language': 'en-US,en',
     }
+    login_params = 'display_type=popup&locale=en_US&response_type=json&next=https%3A%2F%2Fwww.udemy.com%2F'
 
+    # We need this preflight to get hold of a csrf token.
+    r = requests.get(login_url, params=login_params, cookies=cookie_jar, headers=headers)
+    r.raise_for_status()
+    # seems that csrf cookie isn't tracked properly, so we make sure to store it
+    cookie_jar['csrftoken'] = r.cookies.get('csrftoken')
     r = requests.post(login_url, data={
-        'csrfmiddlewaretoken': csrfmiddlewaretoken,
+        'csrfmiddlewaretoken': r.cookies.get('csrftoken'),
         'email': setting_get('user_email'),
         'password': setting_get('user_password'),
         'locale': 'en_US'
-    }, headers=login_headers, cookies=cookie_jar)
-    print(json.dumps(r.cookies.get_dict()))
-    print(r.content)
+    }, headers=login_headers, cookies=cookie_jar, params=login_params)
+
     r.raise_for_status()
     headers['X-Udemy-Authorization'] = headers['Authorization'] = "Bearer %s" % r.cookies['access_token']
 
