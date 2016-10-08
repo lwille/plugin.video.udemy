@@ -19,6 +19,8 @@ cookie_jar.set('csrftoken', csrfmiddlewaretoken)
 
 
 def login():
+
+    plugin.notify("Logging you in as %s" % plugin.get_setting('user_email'), None, 1000)
     login_headers = {
         'Accept': 'application/json, text/plain, */*',
         'Origin': 'https://www.udemy.com',
@@ -38,6 +40,7 @@ def login():
     }, headers=login_headers, cookies=cookie_jar)
     print(json.dumps(r.cookies.get_dict()))
     print(r.content)
+    r.raise_for_status()
     headers['X-Udemy-Authorization'] = headers['Authorization'] = "Bearer %s" % r.cookies['access_token']
 
 
@@ -50,16 +53,16 @@ def get_menu_items():
 
 def load_json(url, params=None):
     r = requests.get(url, params=params, headers=headers, cookies=cookie_jar)
-
-    if r.status_code != 200:
-        raise requests.RequestException(r.json()['detail'])
-
+    r.raise_for_status()
     return r.json()
+
+def ensure_login():
+    if not cookie_jar.get('access_token'):
+        login()
 
 
 @plugin.route('/')
 def index():
-    login()
     return [{
         'label': 'Courses',
         'path': plugin.url_for('courses')
@@ -73,6 +76,7 @@ def play(file):
 
 @plugin.route('/course/<cid>', name='course_details')
 def show_course_details(cid):
+    ensure_login()
     course = load_json("%s/%s/public-curriculum-items" % (courses_url, cid))
     print json.dumps(course)
 
@@ -90,6 +94,9 @@ def show_course_details(cid):
 
 @plugin.route('/courses', name='courses')
 def show_courses():
+
+    ensure_login()
+    plugin.notify("Loading courses for %s" % plugin.get_setting('user_email'), None, 1000)
     courses = load_json(my_courses_url)
 
     items = []
