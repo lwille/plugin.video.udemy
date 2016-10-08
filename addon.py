@@ -6,7 +6,11 @@ from xbmcswift2 import Plugin
 
 plugin = Plugin()
 
-headers = {'user-agent': plugin.name + '/' + plugin.addon.getAddonInfo('version')}
+headers = {'user-agent': plugin.name + '/' + plugin.addon.getAddonInfo('version'),
+           'Origin': 'https://www.udemy.com',
+           'X-Requested-With': 'XMLHttpRequest',
+           'Referer': 'https://www.udemy.com/',
+           'Accept-Language': 'en-US,en',}
 base_url = 'https://www.udemy.com'
 
 my_courses_url = "%s/api-2.0/users/me/subscribed-courses" % base_url
@@ -78,25 +82,63 @@ def index():
     }]
 
 
-@plugin.route('/course/<cid>/play/<title>', name='course_play')
-def play(cid, title):
-    return None
+@plugin.route('/course/<course_id>/play/<lecture_id>', name='course_play')
+def play(course_id, lecture_id):
+    url = base_url + '/api-2.0/users/me/subscribed-courses/%s/lectures/%s' % (course_id, lecture_id)
+    video = load_json(url,
+                      params='fields%5Basset%5D=@min,download_urls,external_url,slide_urls&fields%5Bcourse%5D=id,is_paid,url&fields%5Blecture%5D=@default,view_html,course&page_config=ct_v4&tracking_tag=ctp_lecture')
+    print video
+    files = video.get('asset', {}).get('download_urls', {}).get('Video', [])
+    last_file = files.pop()
+
+    print last_file
+    return {
+        'label': last_file['file'],
+        'path': last_file['file'],
+        'is_playable': True,
+    }
 
 
-@plugin.route('/course/<cid>', name='course_details')
-def show_course_details(cid):
+@plugin.route('/course/<course_id>', name='course_details')
+def show_course_details(course_id):
     ensure_login()
-    course = load_json("%s/%s/public-curriculum-items" % (courses_url, cid))
-    print json.dumps(course)
+    course = load_json("%s/%s/public-curriculum-items" % (courses_url, course_id))
 
     items = []
     lectures = filter(lambda result: result['_class'] == 'lecture', course['results'])
 
     for lecture in lectures:
+
         items.append({
             'label': lecture['title'],
-            'path': plugin.url_for('course_play', cid=cid, title=lecture['asset']['title'])
+            'path': plugin.url_for('course_play', course_id=course_id, lecture_id=lecture['id']),
+            'info':{'label':lecture['title'], 'title':lecture['title'], 'plot': lecture['description'], 'year': lecture['created'], },
+            # 'thumbnail': data.get('VTU').get('IUR'),
+            'info_type': 'video',
         })
+        # 'info': {
+        #     'label': data.get('VTI'),
+        #     'title': data.get('VTI'),
+        #     'duration': str(data.get('VDU')),
+        #     'genre': data.get('VCG'),
+        #     'plot': data.get('VDE'),
+        #     'plotoutline': data.get('V7T'),
+        #     'year': data.get('productionYear'),
+        #     'director': data.get('PPD'),
+        #     'aired': str(airdate)
+        # },
+        # 'properties': {
+        #     'fanart_image': data.get('VTU').get('IUR'),
+        # }})
+
+        # items = []
+        # for video in data[listing_key]:
+        #     item = create_item(video.get('VDO'), {'show_airtime': plugin.request.args.get('date'),
+        #                                           'show_deletetime': sort == 'LAST_CHANCE',
+        #                                           'show_views': sort == 'VIEWS'})
+        #     # item['info']['mpaa'] = video.get('mediaRating' + language[0])
+        #     items.append(item)
+        # return plugin.finish(items)
 
     return plugin.finish(items)
 
@@ -111,7 +153,7 @@ def show_courses():
     for course in courses['results']:
         item = {
             'label': course['title'],
-            'path': plugin.url_for('course_details', cid=course['id']),
+            'path': plugin.url_for('course_details', course_id=course['id']),
             'thumbnail': course['image_480x270'],
             'info_type': 'video',
             'properties': {
@@ -120,15 +162,6 @@ def show_courses():
         }
         items.append(item)
     return plugin.finish(items)
-
-    # items = []
-    # for video in data[listing_key]:
-    #     item = create_item(video.get('VDO'), {'show_airtime': plugin.request.args.get('date'),
-    #                                           'show_deletetime': sort == 'LAST_CHANCE',
-    #                                           'show_views': sort == 'VIEWS'})
-    #     # item['info']['mpaa'] = video.get('mediaRating' + language[0])
-    #     items.append(item)
-    # return plugin.finish(items)
 
 
 if __name__ == '__main__':
