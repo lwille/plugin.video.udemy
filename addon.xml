@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<addon id="plugin.video.udemy" name="Udemy" version="0.0.1" provider-name="lwille">
+    <requires>
+        <import addon="xbmc.python" version="2.14.0"/>
+        <import addon="script.module.xbmcswift2" version="2.4.0"/>
+        <import addon="script.module.requests" version="2.9.1"/>
+    </requires>
+    <extension point="xbmc.python.pluginsource" library="addon.py">
+        <provides>video</provides>
+    </extension>
+    <extension point="xbmc.addon.metadata">
+        <platform>all</platform>
+        <summary>Udemy</summary>
+        <language>de</language>
+        <description lang="en">
+            Access your Udemy classes
+        </description>
+        <license>GPL v2+</license>
+        <source>https://github.com/lwille/plugin.video.udemy.git</source>
+        <website>http://www.udemy.com</website>
+    </extension>
+</addon>

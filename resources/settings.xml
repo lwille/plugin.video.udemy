@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<settings>
+    <category label="General">
+        <setting label="Email" type="text"   id="user_email" default=""/>
+        <setting label="Password" type="text"   id="user_password" option="hidden"  enable="!eq(-1,)" default=""/>
+        <setting type="sep"/>
+        <setting id="debug" type="bool" label="Debug" default="false"/>
+    </category>
+</settings>
