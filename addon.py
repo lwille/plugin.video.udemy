@@ -69,8 +69,8 @@ def index():
     }]
 
 
-@plugin.route('/play/<file>', name='play')
-def play(file):
+@plugin.route('/course/<cid>/play/<title>', name='course_play')
+def play(cid,title):
     return None
 
 
@@ -86,7 +86,7 @@ def show_course_details(cid):
     for lecture in lectures:
         items.append({
             'label': lecture['title'],
-            'path': plugin.url_for('play', url=lecture['asset']['title'])
+            'path': plugin.url_for('course_play', cid=cid, title=lecture['asset']['title'])
         })
 
     return plugin.finish(items)
