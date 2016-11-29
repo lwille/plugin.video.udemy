@@ -19,7 +19,8 @@ addon_id = plugin._addon.getAddonInfo('id')
 icon = 'special://home/addons/%s/icon.png' % addon_id
 
 def login():
-    plugin.notify("Logging you in as %s" % setting_get('user_email'), None, 1000, icon)
+    if setting_get('debug') == True:
+        plugin.notify("Logging you in as %s" % setting_get('user_email'), None, 1000, icon)
     login_headers = {
         'Accept': 'application/json, text/plain, */*',
         'Origin': 'https://www.udemy.com',
@@ -106,7 +107,8 @@ def show_course_details(cid):
 @plugin.route('/courses', name='courses')
 def show_courses():
     ensure_login()
-    plugin.notify("Loading courses for %s" % setting_get('user_email'), None, 1000, icon)
+    if setting_get('debug') == True:
+        plugin.notify("Loading courses for %s" % setting_get('user_email'), None, 1000, icon)
     courses = load_json(my_courses_url)
 
     items = []
