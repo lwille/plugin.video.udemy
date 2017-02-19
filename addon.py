@@ -116,29 +116,6 @@ def show_course_details(course_id):
             # 'thumbnail': data.get('VTU').get('IUR'),
             'info_type': 'video',
         })
-        # 'info': {
-        #     'label': data.get('VTI'),
-        #     'title': data.get('VTI'),
-        #     'duration': str(data.get('VDU')),
-        #     'genre': data.get('VCG'),
-        #     'plot': data.get('VDE'),
-        #     'plotoutline': data.get('V7T'),
-        #     'year': data.get('productionYear'),
-        #     'director': data.get('PPD'),
-        #     'aired': str(airdate)
-        # },
-        # 'properties': {
-        #     'fanart_image': data.get('VTU').get('IUR'),
-        # }})
-
-        # items = []
-        # for video in data[listing_key]:
-        #     item = create_item(video.get('VDO'), {'show_airtime': plugin.request.args.get('date'),
-        #                                           'show_deletetime': sort == 'LAST_CHANCE',
-        #                                           'show_views': sort == 'VIEWS'})
-        #     # item['info']['mpaa'] = video.get('mediaRating' + language[0])
-        #     items.append(item)
-        # return plugin.finish(items)
 
     return plugin.finish(items)
 
