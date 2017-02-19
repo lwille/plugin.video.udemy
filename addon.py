@@ -70,7 +70,7 @@ def load_json(url, params=None):
 
 
 def ensure_login():
-    if not cookie_jar.get('access_token'):
+    if not headers.has_key('X-Udemy-Authorization'):
         login()
 
 
