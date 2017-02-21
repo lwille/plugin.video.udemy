@@ -23,8 +23,7 @@ addon_id = plugin._addon.getAddonInfo('id')
 icon = 'special://home/addons/%s/icon.png' % addon_id
 
 def login():
-    if setting_get('debug') == True:
-        plugin.notify("Logging you in as %s" % setting_get('user_email'), None, 1000, icon)
+    debug_notify("Logging you in as %s" % setting_get('user_email'))
     login_headers = {
         'Accept': 'application/json, text/plain, */*',
         'Origin': 'https://www.udemy.com',
@@ -51,6 +50,11 @@ def login():
 
     r.raise_for_status()
     headers['X-Udemy-Authorization'] = headers['Authorization'] = "Bearer %s" % r.cookies['access_token']
+
+
+def debug_notify(msg):
+    if setting_get('debug'):
+        plugin.notify(msg, None, 1000, icon)
 
 
 def setting_get(key):
@@ -126,8 +130,7 @@ def show_course_details(course_id):
 @plugin.route('/courses', name='courses')
 def show_courses():
     ensure_login()
-    if setting_get('debug') == True:
-        plugin.notify("Loading courses for %s" % setting_get('user_email'), None, 1000, icon)
+    debug_notify("Loading courses for %s" % setting_get('user_email'))
     courses = load_json(my_courses_url)
 
     items = []
