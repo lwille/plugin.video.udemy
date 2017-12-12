@@ -1,6 +1,7 @@
 import json
 import os
 import requests
+import re
 
 from xbmcswift2 import Plugin
 
@@ -55,15 +56,13 @@ def login():
 def debug_notify(msg):
     if setting_get('debug'):
         plugin.notify(msg, None, 1000, icon)
-
+    print(msg)
 
 def setting_get(key):
     if os.environ.get('SETTINGS'):
         return json.loads(os.environ['SETTINGS']).get(key)
     return plugin.get_setting(key)
 
-
-#
 def get_menu_items():
     return [
         (plugin.url_for('courses'), 30001),
@@ -91,25 +90,22 @@ def index():
 
 @plugin.route('/course/<course_id>/play/<lecture_id>', name='course_play')
 def play(course_id, lecture_id):
-    url = base_url + '/api-2.0/users/me/subscribed-courses/%s/lectures/%s' % (course_id, lecture_id)
-    video = load_json(url,
-                      params='fields%5Basset%5D=@min,download_urls,external_url,slide_urls&fields%5Bcourse%5D=id,is_paid,url&fields%5Blecture%5D=@default,view_html,course&page_config=ct_v4&tracking_tag=ctp_lecture')
-    print video
-    files = video.get('asset', {}).get('download_urls', {}).get('Video', [])
-    last_file = files.pop()
-
-    print last_file
-    return {
-        'label': last_file['file'],
-        'path': last_file['file'],
-        'is_playable': True,
-    }
-
-
-@plugin.route('/course/<course_id>', name='course_details')
-def show_course_details(course_id):
     ensure_login()
-    course = load_json("%s/%s/public-curriculum-items" % (courses_url, course_id))
+    url = my_courses_url + '/%s/lectures/%s' % (course_id, lecture_id)
+    video = load_json(url, params='fields%5Basset%5D=@min,stream_urls,file,label')
+    asset = video.get('asset', {})
+    files = asset.get('stream_urls', {}).get('Video', [])
+    first_file = files[0]
+
+    print first_file
+    plugin.set_resolved_url(first_file['file'])
+
+
+@plugin.route('/course/<course_id>/details/<page>', name='course_details')
+def show_course_details(course_id, page):
+    ensure_login()
+    url = my_courses_url + '/%s/lectures?page=%s' % (course_id, page)
+    course = load_json(url)
 
     items = []
     lectures = filter(lambda result: result['_class'] == 'lecture', course['results'])
@@ -119,9 +115,22 @@ def show_course_details(course_id):
         items.append({
             'label': lecture['title'],
             'path': plugin.url_for('course_play', course_id=course_id, lecture_id=lecture['id']),
-            'info':{'label':lecture['title'], 'title':lecture['title'], 'plot': lecture['description'], 'year': lecture['created'], },
-            # 'thumbnail': data.get('VTU').get('IUR'),
+            'info': {
+                'label': lecture['title'],
+                'title': lecture['title'],
+                'plot': lecture['description'],
+                'year': lecture['created']
+            },
+            'is_playable': True,
             'info_type': 'video',
+        })
+
+    if course['next']:
+        next = course['next']
+        pageNo = re.search(r'\d+', next[::-1]).group()[::-1]
+        items.append({
+            'label': 'next',
+            'path': plugin.url_for('course_details', course_id=course_id, page=pageNo),
         })
 
     return plugin.finish(items)
@@ -137,7 +146,7 @@ def show_courses():
     for course in courses['results']:
         item = {
             'label': course['title'],
-            'path': plugin.url_for('course_details', course_id=course['id']),
+            'path': plugin.url_for('course_details', course_id=course['id'], page='1'),
             'thumbnail': course['image_480x270'],
             'info_type': 'video',
             'properties': {
