@@ -1,0 +1,7 @@
+[requires]
+python_version = '2.7'
+[packages]
+requests = '*'
+[dev-packages]
+xbmcswift2 = '*'
+requests = '*'
