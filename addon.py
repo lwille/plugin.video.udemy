@@ -11,7 +11,7 @@ headers = {'user-agent': plugin.name + '/' + plugin.addon.getAddonInfo('version'
            'Origin': 'https://www.udemy.com',
            'X-Requested-With': 'XMLHttpRequest',
            'Referer': 'https://www.udemy.com/',
-           'Accept-Language': 'en-US,en',}
+           'Accept-Language': 'en-US,en', }
 base_url = 'https://www.udemy.com'
 
 my_courses_url = "%s/api-2.0/users/me/subscribed-courses" % base_url
@@ -22,6 +22,7 @@ cookie_jar = requests.cookies.RequestsCookieJar()
 
 addon_id = plugin._addon.getAddonInfo('id')
 icon = 'special://home/addons/%s/icon.png' % addon_id
+
 
 def login():
     debug_notify("Logging you in as %s" % setting_get('user_email'))
@@ -50,7 +51,7 @@ def login():
     }, headers=login_headers, cookies=cookie_jar, params=login_params)
 
     r.raise_for_status()
-    headers['X-Udemy-Authorization'] = headers['Authorization'] = "Bearer %s" % r.cookies['access_token']
+    headers['X-Udemy-Authorization'] = headers['Authorization'] = "Bearer %s" % r.cookies.get('access_token')
 
 
 def debug_notify(msg):
@@ -111,7 +112,6 @@ def show_course_details(course_id, page):
     lectures = filter(lambda result: result['_class'] == 'lecture', course['results'])
 
     for lecture in lectures:
-
         items.append({
             'label': lecture['title'],
             'path': plugin.url_for('course_play', course_id=course_id, lecture_id=lecture['id']),
@@ -136,24 +136,30 @@ def show_course_details(course_id, page):
     return plugin.finish(items)
 
 
+def _load_courses():
+    debug_notify("Loading courses for %s" % setting_get('user_email'))
+    next = my_courses_url
+    while next:
+        response = load_json(next)
+        for item in response['results']:
+            yield item
+        next = response.get('next') \
+
+
 @plugin.route('/courses', name='courses')
 def show_courses():
     ensure_login()
-    debug_notify("Loading courses for %s" % setting_get('user_email'))
-    courses = load_json(my_courses_url)
 
-    items = []
-    for course in courses['results']:
-        item = {
-            'label': course['title'],
-            'path': plugin.url_for('course_details', course_id=course['id'], page='1'),
-            'thumbnail': course['image_480x270'],
-            'info_type': 'video',
-            'properties': {
-                'fanart_image': course['image_480x270'],
-            },
-        }
-        items.append(item)
+    items = list(map(lambda course: {
+        'label': course['title'],
+        'path': plugin.url_for('course_details', course_id=course['id'], page='1'),
+        'thumbnail': course['image_480x270'],
+        'info_type': 'video',
+        'properties': {
+            'fanart_image': course['image_480x270'],
+        },
+    }, _load_courses()))
+
     return plugin.finish(items)
 
 
