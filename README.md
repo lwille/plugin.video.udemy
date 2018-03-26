@@ -7,10 +7,12 @@
 
 ## Contributors
 
-* @keydon
-* @lwille 
-* @ShadowNoire
-* @zag2me
+
+
+* [@keydon](https://github.com/keydon)
+* [@lwille](https://github.com/lwille)
+* [@ShadowNoire](https://github.com/ShadowNoire)
+* [@zag2me](https://github.com/zag2me)
 
 ## Acknowledgements
 
