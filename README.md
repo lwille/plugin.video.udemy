@@ -16,6 +16,6 @@
 
 ## Acknowledgements
 
-Unity Logo is a registered trademark of Udemy, Inc.
+The Udemy logo is a registered trademark of Udemy, Inc.
 
 Image Source: https://pixnio.com/objects/computer/person-work-laptop-computer-hand-technology-pencil-man-internet
