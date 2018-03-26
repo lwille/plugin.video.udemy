@@ -10,13 +10,13 @@
     </extension>
     <extension point="xbmc.addon.metadata">
         <platform>all</platform>
-        <summary>Udemy</summary>
+        <summary>Udemy plugin for Kodi</summary>
         <language>de</language>
         <description lang="en">
-            Access your Udemy classes
+            Access your Udemy classes. The Udemy logo is a registered trademark of Udemy, Inc.
         </description>
         <license>GPL v2+</license>
-        <source>https://github.com/lwille/plugin.video.udemy.git</source>
-        <website>http://www.udemy.com</website>
+        <source>https://github.com/lwille/plugin.video.udemy/releases/latest</source>
+        <website>http://github.com/lwille/plugin.video.udemy</website>
     </extension>
 </addon>
